@@ -1,0 +1,62 @@
+* {
+  box-sizing: content-box;
+  font-family: Inter Light, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#navbar {
+  font-size: larger;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: center;
+  align-items: center;
+  background: linear-gradient(45deg, rgba(1, 1, 131, 0.5), rgba(71, 71, 212, 0.5));
+  box-shadow: 0px 2px 10px black;
+  height: 2.5rem;
+}
+
+.navbar-entry {
+  color: silver;
+  text-shadow: 2px 5px 3px black;
+}
+
+.navbar-entry:hover {
+  color: rgb(227, 221, 221);
+  cursor: pointer;
+  text-shadow: 0px 0px 1px white;
+}
+
+.screen {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  max-height: 100vh;
+}
+
+.screen-bg {
+  background: linear-gradient(0deg, #ffef8917, #c0bfbb2e);
+  border-radius: 15px;
+  height: 80vh;
+  margin: 3%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+
+#study-card {
+  background: linear-gradient(0deg, #ffef8917, #c0bfbb2e);
+  border-radius: 15px;
+  height: 50vh;
+  margin: 3%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(-45deg, rgb(1, 1, 131), rgb(71, 71, 212))
+}

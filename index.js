@@ -24,7 +24,23 @@ function getRandom(array, n = 1) {
   for (let i = 0; i < n; i++) {
     randoms.push(array[Math.floor(Math.random() * array.length)]);
   }
-  return randoms
+  return randoms;
 }
 
-console.log(Card("fronti", "backi"))
+let CURRENT_SCREEN = "Study";
+function changeScreenTo(newScreenName) {
+  if (["Study", "Create", "Edit"].includes(newScreenName)) {
+    CURRENT_SCREEN = newScreenName;
+    const screens = Array.from(document.querySelectorAll(".screen"));
+    //@ts-expect-error - this is an HTMLElement, but JSDoc doesn't seem to allow the "as" that typescript does. Check later.
+    screens.forEach((/**@type {HTMLElement}*/ s) => {
+      if (s.id !== newScreenName + "-screen") {
+        s.style.display = "none";
+      }
+    });
+  } else {
+    console.error("The screen '" + newScreenName + "' doesn't exist!");
+  }
+}
+changeScreenTo("Study");
+console.log(Card("fronti", "backi"));
