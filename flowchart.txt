@@ -1,0 +1,49 @@
+program is loaded .black.circle
+  begin setup loop .green.circle
+    do cards exist in localstorage? .diamond.yellow
+      yes: attempt to load them .circle
+        error? .diamond.yellow
+          yes: prompt user - corrupted, what do? .diamond.yellow
+            delete: delete all and start over
+              entries = `[]`
+                (end setup loop)
+            fix: save the JSON so the user can reupload it
+              (end setup loop)
+          no: add them to the current cards .circle
+            entries = `[...localStorageEntries, entries]` .circle
+              (end setup loop)
+      no: setup complete!
+        (end setup loop)
+end setup loop
+  do both... .circle
+    await user input .circle
+      user presses button - which? .yellow.diamond.circle
+        study: take to study screen .circle
+          are cards currently due?
+            yes: show the card that became due before the others .circle
+              when user answers, is it correct? .circle
+                yes: give new due date .circle
+                no: reduce due date depending on severity .circle
+            no: show "no cards are due" message .circle
+        decks: take to deck screen
+          user can click deck to view cards
+          user can edit and delete cards from there
+          user can edit/delete decks - cards vanish too
+        card creator: take to card creator
+          user enters card info .circle
+            user hits submit .circle
+              card is assigned default date .circle
+                card is added to deck .circle
+    begin check-for-dues loop .green
+      EVERY N SECONDS - default n = 5 .orange
+        are cards due? .yellow.diamond
+          yes: did number of due cards change since last check? .diamond.yellow
+            yes: change main screen count of due cards
+              turn screen slightly pink, or some other similar subtle visual indicator
+                are alerts on? .diamond.yellow
+                  yes: alert
+                    make sure to check that desktop notifs work too
+            no: (wait N seconds)
+          no: wait N seconds
+            check again
+              (are cards due?)
