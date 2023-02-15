@@ -6,8 +6,8 @@
  * @returns {{front: string, back: string, id: string}}
  */
 function Card(front, back) {
-  let number = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  let id = Date.now() + front + back + getRandom(number, 10).join("");
+  let number = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  let id = [Date.now(), front, back, getRandom(number, 3).join("")].join("_");
   return {
     front,
     back,
@@ -27,6 +27,4 @@ function getRandom(array, n = 1) {
   return randoms
 }
 
-console.log(Card("fronti", "backi"))
-console.log(Card("fronti", "backi"))
 console.log(Card("fronti", "backi"))
