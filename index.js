@@ -1,4 +1,5 @@
 //@ts-check
+
 /**
  * @typedef {Object} Card
  * @property {string} front
@@ -7,6 +8,7 @@
  * @property {number} dueDistance
  * @property {number} dueMS
  */
+
 /**
  *
  * @param {string} front
@@ -18,13 +20,16 @@ function makeCard(front, back) {
   const creationMS = Date.now();
   const id = [creationMS, front, back, getRandom(number, 3).join("")].join("_");
   const creationDueDistance = 300;
-  return {
+  let card = {
     front,
     back,
     id,
     dueDistance: creationDueDistance,
     dueMS: creationDueDistance + creationMS,
   };
+  if (cards.filter(c => c.front === front && c.back === back).length === 0)
+  cards.push(card)
+  return card
 }
 /**
  * Returns random N entries from a given array.
@@ -44,6 +49,7 @@ function getRandom(array, n = 1) {
  * @param {string} newScreenName
  */
 function changeScreenTo(newScreenName) {
+  if (newScreenName.includes("-screen")) newScreenName = newScreenName.replace("-screen", "")
   if (["Study", "Create", "Edit"].includes(newScreenName)) {
     CURRENT_SCREEN = newScreenName;
     const screens = Array.from(document.querySelectorAll(".screen"));
@@ -51,6 +57,8 @@ function changeScreenTo(newScreenName) {
     screens.forEach((/**@type {HTMLElement}*/ s) => {
       if (s.id !== newScreenName + "-screen") {
         s.style.display = "none";
+      } else {
+        s.style.display = "block"
       }
     });
   } else {
@@ -60,6 +68,7 @@ function changeScreenTo(newScreenName) {
 window.addEventListener("click", (e) => {
   let arrowHolderElement = document.getElementById("answer-bar-arrow-holder");
   if (e.target === document.getElementById("answer-bar")) {
+    alert("Ok")
     let AB = document.getElementById("answer-bar");
     // @ts-ignore
     if (AB && arrowHolderElement) {
@@ -98,3 +107,11 @@ changeScreenTo("Study");
 function getDueCards() {
   return cards.map(c => c.dueMS < Date.now())
 }
+console.log(cards)
+
+document.querySelectorAll(".navbar-entry").forEach(screen => {
+  console.log(screen)
+  screen.addEventListener("click", () => {
+    changeScreenTo(screen.innerHTML)
+  })
+})
