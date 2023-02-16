@@ -1,17 +1,29 @@
 //@ts-check
 /**
+ * @typedef {Object} Card
+ * @property {string} front
+ * @property {string} back
+ * @property {string} id
+ * @property {number} dueDistance
+ * @property {number} dueMS
+ */
+/**
  *
  * @param {string} front
  * @param {string} back
- * @returns {{front: string, back: string, id: string}}
+ * @returns {Card}
  */
-function Card(front, back) {
-  let number = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-  let id = [Date.now(), front, back, getRandom(number, 3).join("")].join("_");
+function makeCard(front, back) {
+  const number = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const creationMS = Date.now();
+  const id = [creationMS, front, back, getRandom(number, 3).join("")].join("_");
+  const creationDueDistance = 300;
   return {
     front,
     back,
     id,
+    dueDistance: creationDueDistance,
+    dueMS: creationDueDistance + creationMS,
   };
 }
 /**
@@ -27,7 +39,10 @@ function getRandom(array, n = 1) {
   return randoms;
 }
 
-let CURRENT_SCREEN = "Study";
+/**
+ *
+ * @param {string} newScreenName
+ */
 function changeScreenTo(newScreenName) {
   if (["Study", "Create", "Edit"].includes(newScreenName)) {
     CURRENT_SCREEN = newScreenName;
@@ -42,5 +57,44 @@ function changeScreenTo(newScreenName) {
     console.error("The screen '" + newScreenName + "' doesn't exist!");
   }
 }
+window.addEventListener("click", (e) => {
+  let arrowHolderElement = document.getElementById("answer-bar-arrow-holder");
+  if (e.target === document.getElementById("answer-bar")) {
+    let AB = document.getElementById("answer-bar");
+    // @ts-ignore
+    if (AB && arrowHolderElement) {
+      arrowHolderElement.style.translate = `${e.clientX - 0.5 * innerWidth}px`;
+      let current = e.clientX - 0.5 * innerWidth;
+      let minMax = AB.clientWidth;
+      let result = (current / minMax) * 2;
+      if (e.clientX > innerWidth / 2) {
+        result = Math.abs(result);
+      } else {
+        result = -Math.abs(result);
+      }
+      answerCard(CURRENT_CARD, result);
+    }
+  }
+});
+
+/**
+ *
+ * @param {Card} card
+ * @param {number} rating
+ */
+function answerCard(card, rating) {
+  if (rating < -0.2) {
+    rating /= 2
+  }
+  const previousDueDistance = card.dueDistance;
+  const newDueDistance = previousDueDistance + previousDueDistance * rating;
+  card.dueDistance = newDueDistance;
+  card.dueMS = Date.now() + newDueDistance;
+}
+const cards = []
+let CURRENT_SCREEN = "Study";
+let CURRENT_CARD = makeCard("testing front", "testing back");
 changeScreenTo("Study");
-console.log(Card("fronti", "backi"));
+function getDueCards() {
+  return cards.map(c => c.dueMS < Date.now())
+}
