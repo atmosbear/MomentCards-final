@@ -12,17 +12,21 @@
     <div class="navbar-entry">Settings</div>
   </div>
   <div class="screen" id="Create-screen">
-    <div id="creation-screen-left">
-      <textarea class="creation-card" id="create-card-front" placeholder="front"></textarea>
-      <textarea class="creation-card" id="create-card-back" placeholder="back"></textarea>
-      <button id="creation-card-button">Create</button>
-    </div>
-    <div id="creation-screen-right">
-      <div id="card-list">
+    <div class="screen-title">Create</div>
+    <div class="screen-bg" id="creation-screen-bg">
+      <div id="creation-screen-left">
+        <textarea class="creation-card" id="create-card-front" placeholder="front"></textarea>
+        <textarea class="creation-card" id="create-card-back" placeholder="back"></textarea>
+        <button id="creation-card-button">Create</button>
+      </div>
+      <div id="creation-screen-right">
+        <div id="card-list">
+        </div>
       </div>
     </div>
   </div>
   <div class="screen" id="Study-screen">
+    <div class="screen-title">Study</div>
     <div class="screen-bg">
       <div id="study-card"></div>
       <button id="flip-button">Flip</button>
@@ -39,13 +43,15 @@
     </div>
   </div>
   <div class="screen" id="Settings-screen">
+    <div class="screen-title">Settings</div>
     <div class="screen-bg" id="settings-screen-bg">
-      Settings
       <label for="volume">Volume</label>
       <input id="volume" type="range" min="0" max="10" value="0.25" step="0.01">
       <label for="default-due-seconds">Default due date from creation (in seconds)</label>
       <input id="default-due-seconds" type="number">
-      <select><option>meow</option></select>
-      </div>
+      <select>
+        <option>meow</option>
+      </select>
+    </div>
   </div>
 </body>
