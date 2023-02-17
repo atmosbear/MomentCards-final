@@ -1,6 +1,7 @@
 * {
   box-sizing: content-box;
   font-family: Inter Light, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: white;
 }
 
 #navbar {
@@ -51,7 +52,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
 }
 
 #answer-bar {
@@ -114,8 +114,53 @@
   align-items: center;
   justify-content: center;
 }
+
 body {
   margin: 0;
   min-height: 100vh;
   background: linear-gradient(-45deg, rgb(1, 1, 131), rgb(71, 71, 212));
+}
+
+#Create-screen {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 20px;
+}
+.creation-card:active {
+}
+.creation-card, .creation-card-button {
+  padding: 20%;
+  text-align: center;
+  background: linear-gradient(-45deg, rgb(101, 105, 157), rgb(131, 155, 212));
+  box-shadow: 0px 0px 10px darkblue;
+  margin: 10px;
+  border-radius: 10px;
+  border: none;
+}
+.creation-card-button:active {
+  background: rgb(101, 105, 157);
+}
+.creation-card-button {
+  padding: 10px;
+  width: 100%;
+  cursor: pointer;
+}
+
+#creation-screen-right,
+#creation-screen-left {
+  width: 90%;
+  justify-self: center;
+}
+
+.card-list-entry {
+  background: linear-gradient(rgb(183, 182, 182), gray);
+  border-radius: 10px;
+  color: #333;
+  padding: 10px;
+  margin: 10px;
+}
+
+.card-list-entry:hover {
+  color: white;
+  text-shadow: 1px 1px 1px black;
 }

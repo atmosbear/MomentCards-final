@@ -11,10 +11,25 @@
     <div class="navbar-entry">Study</div>
     <div class="navbar-entry">Edit</div>
   </div>
-  <div class="screen" id="Create-screen"></div>
+  <div class="screen" id="Create-screen">
+    <div id="creation-screen-left">
+      <textarea class="creation-card" id="create-card-front">front</textarea>
+      <textarea class="creation-card" id="create-card-back">back</textarea>
+      <button class="creation-card-button">Create</button>
+    </div>
+    <div id="creation-screen-right">
+      <div id="card-list">
+        <div class="card-list-entry">front<br>back</div>
+        <div class="card-list-entry">card</div>
+        <div class="card-list-entry">card</div>
+        <div class="card-list-entry">card</div>
+        <div class="card-list-entry">card</div>
+      </div>
+    </div>
+  </div>
   <div class="screen" id="Study-screen">
     <div class="screen-bg">
-      <div id="study-card">What chord is...</div>
+      <div id="study-card"></div>
       <button id="flip-button">Flip</button>
       <div id="answer-bar-holder">
         <div>Awful</div>
@@ -28,5 +43,6 @@
       </div>
     </div>
   </div>
-  <div class="screen" id="Edit-screen"></div>
+  <div class="screen" id="Edit-screen">
+  </div>
 </body>

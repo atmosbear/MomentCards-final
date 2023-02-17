@@ -27,9 +27,26 @@ function makeCard(front, back) {
     dueDistance: creationDueDistance,
     dueMS: creationDueDistance + creationMS,
   };
-  if (cards.filter(c => c.front === front && c.back === back).length === 0)
-  cards.push(card)
-  return card
+  if (cards.filter((c) => c.front === front && c.back === back).length === 0) cards.push(card);
+  let entryEl = document.createElement("div")
+  let listEntry = document.getElementById("card-list")
+  entryEl.classList.add("card-list-entry")
+  addLabelToCardEntries(entryEl, front, back)
+  if (listEntry) {
+    listEntry.appendChild(entryEl)
+  }
+  return card;
+}
+
+/**
+   * @param {HTMLElement} entryEl
+   * @param {string} front 
+   * @param {string} back 
+   */
+function addLabelToCardEntries(entryEl, front, back) {
+  let fText = innerWidth > 500 ? "Front:" : "F:"
+  let bText = innerWidth > 500 ? "Back:" : "B:"
+  entryEl.innerText = fText + front + "\n" + bText + back
 }
 /**
  * Returns random N entries from a given array.
@@ -49,7 +66,7 @@ function getRandom(array, n = 1) {
  * @param {string} newScreenName
  */
 function changeScreenTo(newScreenName) {
-  if (newScreenName.includes("-screen")) newScreenName = newScreenName.replace("-screen", "")
+  if (newScreenName.includes("-screen")) newScreenName = newScreenName.replace("-screen", "");
   if (["Study", "Create", "Edit"].includes(newScreenName)) {
     CURRENT_SCREEN = newScreenName;
     const screens = Array.from(document.querySelectorAll(".screen"));
@@ -58,7 +75,7 @@ function changeScreenTo(newScreenName) {
       if (s.id !== newScreenName + "-screen") {
         s.style.display = "none";
       } else {
-        s.style.display = "block"
+        s.style.display = "grid";
       }
     });
   } else {
@@ -68,7 +85,7 @@ function changeScreenTo(newScreenName) {
 window.addEventListener("click", (e) => {
   let arrowHolderElement = document.getElementById("answer-bar-arrow-holder");
   if (e.target === document.getElementById("answer-bar")) {
-    alert("Ok")
+    alert("Ok");
     let AB = document.getElementById("answer-bar");
     // @ts-ignore
     if (AB && arrowHolderElement) {
@@ -81,7 +98,7 @@ window.addEventListener("click", (e) => {
       } else {
         result = -Math.abs(result);
       }
-      answerCard(CURRENT_CARD, result);
+      answerCard(getDueCards()[0], result);
     }
   }
 });
@@ -93,25 +110,49 @@ window.addEventListener("click", (e) => {
  */
 function answerCard(card, rating) {
   if (rating < -0.2) {
-    rating /= 2
+    rating /= 2;
   }
   const previousDueDistance = card.dueDistance;
   const newDueDistance = previousDueDistance + previousDueDistance * rating;
   card.dueDistance = newDueDistance;
   card.dueMS = Date.now() + newDueDistance;
 }
-const cards = []
-let CURRENT_SCREEN = "Study";
-let CURRENT_CARD = makeCard("testing front", "testing back");
-changeScreenTo("Study");
+/**
+ * Returns all cards that are overdue.
+ * @returns {Card[]}
+ */
 function getDueCards() {
-  return cards.map(c => c.dueMS < Date.now())
+  let dues = cards.filter((c) => {
+    console.log(c.dueMS <= Date.now());
+    return c.dueMS <= Date.now();
+  });
+  return dues;
 }
-console.log(cards)
+function setup() {
+  document.querySelectorAll(".navbar-entry").forEach((screen) => {
+    screen.addEventListener("click", () => {
+      changeScreenTo(screen.innerHTML);
+    });
+  });
+  document.getElementById("flip-button")?.addEventListener("click", () => {
+    flip()
+  });
+  let studyCardEl = document.getElementById("study-card");
+  if (studyCardEl && getDueCards()[0]) studyCardEl.innerHTML = getDueCards()[0].front;
+}
 
-document.querySelectorAll(".navbar-entry").forEach(screen => {
-  console.log(screen)
-  screen.addEventListener("click", () => {
-    changeScreenTo(screen.innerHTML)
-  })
-})
+function flip() {
+  let studyCardEl = document.getElementById("study-card");
+  if (studyCardEl) {
+    if (getDueCards()[0])
+      if (getDueCards()[0].front === studyCardEl.innerText) studyCardEl.innerText = getDueCards()[0].back;
+      else studyCardEl.innerText = getDueCards()[0].front;
+  }
+}
+const cards = [];
+makeCard("hello", "goobie");
+setup();
+let CURRENT_SCREEN = "Study";
+changeScreenTo("Create");
+console.log(cards);
+console.log(Date.now());
