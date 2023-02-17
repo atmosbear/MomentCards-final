@@ -1,5 +1,5 @@
 * {
-  box-sizing: content-box;
+  border: solid red 2px;
   font-family: Inter Light, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: white;
 }
@@ -126,9 +126,10 @@ body {
   grid-template-columns: 1fr 1fr;
   margin: 20px;
 }
-.creation-card:active {
-}
-.creation-card, #creation-card-button {
+.creation-card,
+#creation-card-button {
+  justify-self: center;
+  align-self: start;
   padding: 1rem 5%;
   text-align: center;
   background: linear-gradient(-45deg, rgb(101, 105, 157), rgb(131, 155, 212));
@@ -136,23 +137,28 @@ body {
   margin: 10px;
   border-radius: 10px;
   border: none;
+  width: 100%;
 }
 #creation-card-button:active {
   background: rgb(101, 105, 157);
 }
 #creation-card-button {
+  cursor: pointer;
   padding: 10px;
   width: 100%;
-  cursor: pointer;
 }
 
 #creation-screen-right,
 #creation-screen-left {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
   width: 90%;
+  height: fit-content;
   justify-self: center;
 }
 
 .card-list-entry {
+  cursor: default;
   background: linear-gradient(rgb(183, 182, 182), gray);
   border-radius: 10px;
   color: #333;
@@ -163,4 +169,14 @@ body {
 .card-list-entry:hover {
   color: white;
   text-shadow: 1px 1px 1px black;
+}
+
+input,
+select {
+  color: black;
+}
+
+#settings-screen-bg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }

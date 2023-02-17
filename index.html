@@ -9,21 +9,16 @@
   <div id="navbar">
     <div class="navbar-entry">Create</div>
     <div class="navbar-entry">Study</div>
-    <div class="navbar-entry">Edit</div>
+    <div class="navbar-entry">Settings</div>
   </div>
   <div class="screen" id="Create-screen">
     <div id="creation-screen-left">
-      <textarea class="creation-card" id="create-card-front">front</textarea>
-      <textarea class="creation-card" id="create-card-back">back</textarea>
+      <textarea class="creation-card" id="create-card-front" placeholder="front"></textarea>
+      <textarea class="creation-card" id="create-card-back" placeholder="back"></textarea>
       <button id="creation-card-button">Create</button>
     </div>
     <div id="creation-screen-right">
       <div id="card-list">
-        <div class="card-list-entry">front<br>back</div>
-        <div class="card-list-entry">card</div>
-        <div class="card-list-entry">card</div>
-        <div class="card-list-entry">card</div>
-        <div class="card-list-entry">card</div>
       </div>
     </div>
   </div>
@@ -43,6 +38,14 @@
       </div>
     </div>
   </div>
-  <div class="screen" id="Edit-screen">
+  <div class="screen" id="Settings-screen">
+    <div class="screen-bg" id="settings-screen-bg">
+      Settings
+      <label for="volume">Volume</label>
+      <input id="volume" type="range" min="0" max="10" value="0.25" step="0.01">
+      <label for="default-due-seconds">Default due date from creation (in seconds)</label>
+      <input id="default-due-seconds" type="number">
+      <select><option>meow</option></select>
+      </div>
   </div>
 </body>
