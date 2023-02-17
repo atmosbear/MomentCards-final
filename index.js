@@ -28,25 +28,35 @@ function makeCard(front, back) {
     dueMS: creationDueDistance + creationMS,
   };
   if (cards.filter((c) => c.front === front && c.back === back).length === 0) cards.push(card);
-  let entryEl = document.createElement("div")
-  let listEntry = document.getElementById("card-list")
-  entryEl.classList.add("card-list-entry")
-  addLabelToCardEntries(entryEl, front, back)
+  let entryEl = document.createElement("div");
+  let listEntry = document.getElementById("card-list");
+  entryEl.classList.add("card-list-entry");
+  addLabelToCardEntries(entryEl, card);
   if (listEntry) {
-    listEntry.appendChild(entryEl)
+    listEntry.appendChild(entryEl);
   }
   return card;
 }
 
 /**
-   * @param {HTMLElement} entryEl
-   * @param {string} front 
-   * @param {string} back 
-   */
-function addLabelToCardEntries(entryEl, front, back) {
-  let fText = innerWidth > 500 ? "Front:" : "F:"
-  let bText = innerWidth > 500 ? "Back:" : "B:"
-  entryEl.innerText = fText + front + "\n" + bText + back
+ * @param {HTMLElement} entryEl
+ * @param {Card} card
+ */
+function addLabelToCardEntries(entryEl, card) {
+  let fText = innerWidth > 500 ? "Front: " : "F: ";
+  let bText = innerWidth > 500 ? "Back: " : "B: ";
+  let dText = innerWidth > 500 ? "Due at: " : "D: ";
+  entryEl.innerText = fText + card.front + "\n" + bText + card.back + "\n" + dText + card.dueMS;
+}
+
+/**
+ *
+ * @param {number} ms
+ * @returns {string} as friendly date
+ */
+function MStoDateString(ms) {
+  let newDate = ""
+  return newDate;
 }
 /**
  * Returns random N entries from a given array.
@@ -129,13 +139,34 @@ function getDueCards() {
   return dues;
 }
 function setup() {
-  document.querySelectorAll(".navbar-entry").forEach((screen) => {
-    screen.addEventListener("click", () => {
-      changeScreenTo(screen.innerHTML);
+  function setupCardCreationButton() {
+    let cb = document.getElementById("creation-card-button");
+    if (cb)
+      cb.onclick = () => {
+        let fCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-front"));
+        let bCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-back"));
+        if (fCardEl && bCardEl) {
+          makeCard(fCardEl.value, bCardEl.value);
+        } else {
+          console.log("a");
+        }
+      };
+    else {
+      console.log("wat");
+    }
+  }
+  function setupNavbarScreenChanges() {
+    document.querySelectorAll(".navbar-entry").forEach((screen) => {
+      screen.addEventListener("click", () => {
+        changeScreenTo(screen.innerHTML);
+      });
     });
-  });
+  }
+  setupCardCreationButton();
+  setupNavbarScreenChanges();
+
   document.getElementById("flip-button")?.addEventListener("click", () => {
-    flip()
+    flip();
   });
   let studyCardEl = document.getElementById("study-card");
   if (studyCardEl && getDueCards()[0]) studyCardEl.innerHTML = getDueCards()[0].front;
