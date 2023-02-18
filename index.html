@@ -45,13 +45,11 @@
   <div class="screen" id="Settings-screen">
     <div class="screen-title">Settings</div>
     <div class="screen-bg" id="settings-screen-bg">
-      <label for="volume">Volume</label>
-      <input id="volume" type="range" min="0" max="10" value="0.25" step="0.01">
-      <label for="default-due-seconds">Default due date from creation (in seconds)</label>
+      <label class="settings-entry-label" for="volume">Volume</label>
+      <input id="volume" type="range" min="0" max="1" value="0.25" step="0.01">
+      <label class="settings-entry-label" for="default-due-seconds">Default due date from creation (in seconds)</label>
       <input id="default-due-seconds" type="number">
-      <select>
-        <option>meow</option>
-      </select>
     </div>
+    <button id="save-settings-button">Save Settings</button>
   </div>
 </body>

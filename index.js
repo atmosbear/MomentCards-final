@@ -28,17 +28,44 @@ function makeCard(front, back) {
     dueMS: creationDueDistance + creationMS,
   };
   if (cards.find((c) => c.front === front && c.back === back) === undefined) cards.push(card);
-  let entryEl = document.createElement("div");
-  let listEntry = document.getElementById("card-list");
-  entryEl.classList.add("card-list-entry");
-  addLabelToCardEntries(entryEl, card);
-  if (listEntry) {
-    listEntry.appendChild(entryEl);
-  }
+  // entry
+  addNewEntryToCardList();
+  saveCardsToLS();
   return card;
+
+  /**
+   * Places the card in the list so the user can see it.
+   */
+  function addNewEntryToCardList() {
+    let cardListEl = document.getElementById("card-list");
+    if (cardListEl) {
+      // card info
+      let entryHolderEl = document.createElement("div");
+      let entryTextEl = document.createElement("div");
+      entryHolderEl.classList.add("entry-holder-el");
+      entryTextEl.classList.add("card-list-entry");
+      // buttons
+      let buttonHolderEl = document.createElement("div");
+      let delButton = document.createElement("div");
+      let editButton = document.createElement("div");
+      buttonHolderEl.classList.add("button-holder");
+      delButton.classList.add("delete-edit-button");
+      editButton.classList.add("delete-edit-button");
+      delButton.innerText = "Delete";
+      editButton.innerText = "Edit";
+      // add them
+      addLabelToCardEntries(entryTextEl, card);
+      entryHolderEl.appendChild(entryTextEl);
+      buttonHolderEl.appendChild(delButton);
+      buttonHolderEl.appendChild(editButton);
+      entryHolderEl.appendChild(buttonHolderEl);
+      cardListEl.appendChild(entryHolderEl);
+    }
+  }
 }
 
 /**
+ * Updates the card's label with its current information.
  * @param {HTMLElement} entryEl
  * @param {Card} card
  */
@@ -50,12 +77,8 @@ function addLabelToCardEntries(entryEl, card) {
   let dAtText = innerWidth > 500 ? "Due at: " : "D: ";
   entryEl.innerText =
     fText + card.front + "\n" + bText + card.back + "\n" + dInText + msDueDateToRoundedTime(card.dueMS);
-  // "\n" +
-  // dAtText +
-  // "Parsing dates TBA";
 }
-/** @type {{card: Card, entryEl: HTMLElement}[]} */
-let entryEls = [];
+/** @type {{card: Card, entryEl: HTMLElement}[]} */ let entryEls = [];
 let waitingOn = 0;
 entryEls.forEach((ec) => {
   ec.entryEl.onclick = () => {};
@@ -68,7 +91,7 @@ setInterval(() => {
     waitingOn++;
     if (soundWhenCardBecomesDue) {
       let a = new Audio("./sounds/E5.mp3");
-      a.volume = 0.4;
+      a.volume = VOLUME;
       a.play();
     }
     new Notification("A new card is due.");
@@ -78,7 +101,7 @@ setInterval(() => {
       if (reminderNotifsOn && Date.now() > goalReminderDate) {
         if (soundWhenCardBecomesDue) {
           let a = new Audio("./sounds/Gs3.mp3");
-          a.volume = 0.4;
+          a.volume = VOLUME;
           a.play();
         }
         new Notification(
@@ -98,7 +121,7 @@ setInterval(() => {
 }, 1000);
 
 /**
- *
+ * Converts milliseconds to a more human-readable date, such as a rounded number so that there are no decimals unless larger than minutes.
  * @param {number} ms
  * @returns {string} as friendly date
  */
@@ -155,7 +178,7 @@ function getRandom(array, n = 1) {
 }
 
 /**
- *
+ * Displays just the requested screen, and hides every other screen.
  * @param {string} newScreenName
  */
 function changeScreenTo(newScreenName) {
@@ -175,6 +198,9 @@ function changeScreenTo(newScreenName) {
     console.error("The screen '" + newScreenName + "' doesn't exist!");
   }
 }
+/**
+ * Makes the answer bar within the study screen clickable so that the user can answer cards. Also, makes the
+ */
 function setupStudyBarClickEvent() {
   window.addEventListener("click", (e) => {
     let arrowHolderElement = document.getElementById("answer-bar-arrow-holder");
@@ -199,7 +225,7 @@ function setupStudyBarClickEvent() {
 }
 
 /**
- *
+ * Schedules the card some time into the future, proportional to the user's rating.
  * @param {Card} card
  * @param {number} rating
  */
@@ -223,22 +249,39 @@ function getDueCards() {
   });
   return dues;
 }
+/**
+ * Sets up the app - mostly click events.
+ */
 function setup() {
-  setupStudyBarClickEvent();
+  function setupSettingsScreen() {
+    let v = /** @type {HTMLInputElement} */ (document.getElementById("volume"));
+    let s = document.getElementById("default-due-seconds");
+    if (v) {
+      v.value = VOLUME.toString();
+      v.onclick = (e) => {
+        if (e && e.target) {
+          // @ts-ignore - it does exist
+          VOLUME = /** @type {Number} */ (e.target.value);
+          let response = new Audio("./sounds/As2.mp3");
+          response.volume = VOLUME;
+          response.play();
+        }
+      };
+    }
+    if (s) {
+      s.onchange;
+    }
+  }
   function setupCardCreationButton() {
     let cb = document.getElementById("creation-card-button");
     if (cb) {
       cb.onclick = () => {
-        let fCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-front"));
-        let bCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-back"));
         if (fCardEl && bCardEl) {
           makeCard(fCardEl.value, bCardEl.value);
         }
       };
     }
   }
-  let fCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-front"));
-  let bCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-back"));
   function setupNavbarScreenChanges() {
     document.querySelectorAll(".navbar-entry").forEach((screen) => {
       screen.addEventListener("click", () => {
@@ -246,6 +289,10 @@ function setup() {
       });
     });
   }
+  let fCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-front"));
+  let bCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-back"));
+  setupSettingsScreen();
+  setupStudyBarClickEvent();
   setupCardCreationButton();
   setupNavbarScreenChanges();
 
@@ -254,6 +301,9 @@ function setup() {
   });
 }
 
+/**
+ * Refreshes the study card to ensure it is up to date.
+ */
 function refreshStudyCard() {
   let studyCardEl = document.getElementById("study-card");
   if (studyCardEl && getDueCards()[0]) studyCardEl.innerHTML = getDueCards()[0].front;
@@ -261,6 +311,9 @@ function refreshStudyCard() {
     studyCardEl.innerHTML = "There are no cards to study.";
   }
 }
+/**
+ * Flips the study card so that the other side is showing.
+ */
 function flip() {
   let studyCardEl = document.getElementById("study-card");
   if (studyCardEl) {
@@ -269,12 +322,38 @@ function flip() {
       else studyCardEl.innerText = getDueCards()[0].front;
   }
 }
-const cards = [];
-let lastReminderDate = 0;
-let reminderNotifsOn = true;
-let becomesDueNotifsOn = true;
-let remindMeAfterXSeconds = 25;
 Notification.requestPermission();
-setup();
+let remindMeAfterXSeconds = 25;
+let becomesDueNotifsOn = true;
 let CURRENT_SCREEN = "Study";
+let reminderNotifsOn = true;
+let lastReminderDate = 0;
+let VOLUME = 0.25;
+/** @type {Card[]} */
+const cards = [];
+setup();
+loadCardsFromLS();
+function loadCardsFromLS() {
+  /**@type {string | null} */
+  let cardsJSON = localStorage.getItem("cards");
+  if (cardsJSON) {
+    /** @type {Card[]} */
+    let savedCards = JSON.parse(cardsJSON);
+    let IDs = cards.flatMap(c => c.id)
+    cards.push(
+      ...savedCards.filter((c) => {
+        return !IDs.includes(c.id)
+      })
+    );
+  }
+}
+function saveCardsToLS() {
+  localStorage.setItem("cards", JSON.stringify(cards));
+}
 changeScreenTo("Create");
+// setTimeout(() => {
+//   window.open("meow.com", "meow.com")
+//   window.blur()
+//   window.focus();
+//   console.log("ok")
+// }, 2000);
