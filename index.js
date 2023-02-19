@@ -10,7 +10,6 @@
  */
 
 /**
- *
  * @param {string} front
  * @param {string} back
  * @returns {Card}
@@ -27,41 +26,52 @@ function makeCard(front, back) {
     dueDistance: creationDueDistance,
     dueMS: creationDueDistance + creationMS,
   };
-  if (cards.find((c) => c.front === front && c.back === back) === undefined) cards.push(card);
-  // entry
-  addNewEntryToCardList();
-  saveCardsToLS();
-  return card;
-
-  /**
-   * Places the card in the list so the user can see it.
-   */
-  function addNewEntryToCardList() {
-    let cardListEl = document.getElementById("card-list");
-    if (cardListEl) {
-      // card info
-      let entryHolderEl = document.createElement("div");
-      let entryTextEl = document.createElement("div");
-      entryHolderEl.classList.add("entry-holder-el");
-      entryTextEl.classList.add("card-list-entry");
-      // buttons
-      let buttonHolderEl = document.createElement("div");
-      let delButton = document.createElement("div");
-      let editButton = document.createElement("div");
-      buttonHolderEl.classList.add("button-holder");
-      delButton.classList.add("delete-edit-button");
-      editButton.classList.add("delete-edit-button");
-      delButton.innerText = "Delete";
-      editButton.innerText = "Edit";
-      // add them
-      addLabelToCardEntries(entryTextEl, card);
-      entryHolderEl.appendChild(entryTextEl);
-      buttonHolderEl.appendChild(delButton);
-      buttonHolderEl.appendChild(editButton);
-      entryHolderEl.appendChild(buttonHolderEl);
-      cardListEl.appendChild(entryHolderEl);
-    }
+  if (
+    // c.front === front && c.back === back
+    cards.find(
+      (c) =>
+      { return c.id }
+    ) === undefined
+  ) {
+    cards.push(card);
+    // entry
+    addNewEntryToCardList(card);
+    saveCardsToLS();
   }
+  return card;
+}
+
+/**
+ * Places the card in the list so the user can see it.
+ * @param {Card} card
+ * @returns {HTMLDivElement}
+ */
+function addNewEntryToCardList(card) {
+  let cardListEl = document.getElementById("card-list");
+  let entryHolderEl = document.createElement("div");
+  if (cardListEl) {
+    // card info
+    let entryTextEl = document.createElement("div");
+    entryHolderEl.classList.add("entry-holder-el");
+    entryTextEl.classList.add("card-list-entry");
+    // buttons
+    let buttonHolderEl = document.createElement("div");
+    let delButton = document.createElement("div");
+    let editButton = document.createElement("div");
+    buttonHolderEl.classList.add("button-holder");
+    delButton.classList.add("delete-edit-button");
+    editButton.classList.add("delete-edit-button");
+    delButton.innerText = "Delete";
+    editButton.innerText = "Edit";
+    // add them
+    addLabelToCardEntries(entryTextEl, card);
+    entryHolderEl.appendChild(entryTextEl);
+    buttonHolderEl.appendChild(delButton);
+    buttonHolderEl.appendChild(editButton);
+    entryHolderEl.appendChild(buttonHolderEl);
+    cardListEl.appendChild(entryHolderEl);
+  }
+  return entryHolderEl;
 }
 
 /**
@@ -78,47 +88,6 @@ function addLabelToCardEntries(entryEl, card) {
   entryEl.innerText =
     fText + card.front + "\n" + bText + card.back + "\n" + dInText + msDueDateToRoundedTime(card.dueMS);
 }
-/** @type {{card: Card, entryEl: HTMLElement}[]} */ let entryEls = [];
-let waitingOn = 0;
-entryEls.forEach((ec) => {
-  ec.entryEl.onclick = () => {};
-});
-let soundWhenCardBecomesDue = true;
-let soundWhenReminding = true;
-setInterval(() => {
-  refreshStudyCard();
-  if (waitingOn < getDueCards().length) {
-    waitingOn++;
-    if (soundWhenCardBecomesDue) {
-      let a = new Audio("./sounds/E5.mp3");
-      a.volume = VOLUME;
-      a.play();
-    }
-    new Notification("A new card is due.");
-  } else {
-    if (getDueCards().length > 0) {
-      let goalReminderDate = lastReminderDate + remindMeAfterXSeconds * 1000;
-      if (reminderNotifsOn && Date.now() > goalReminderDate) {
-        if (soundWhenCardBecomesDue) {
-          let a = new Audio("./sounds/Gs3.mp3");
-          a.volume = VOLUME;
-          a.play();
-        }
-        new Notification(
-          getDueCards().length === 1
-            ? "Remember: you have 1 due card!"
-            : `Remember: you have ${getDueCards().length} due cards!`
-        );
-        lastReminderDate = Date.now();
-      } else {
-        console.log(goalReminderDate, Date.now());
-      }
-    }
-  }
-  entryEls.forEach((ec) => {
-    addLabelToCardEntries(ec.entryEl, ec.card);
-  });
-}, 1000);
 
 /**
  * Converts milliseconds to a more human-readable date, such as a rounded number so that there are no decimals unless larger than minutes.
@@ -257,14 +226,12 @@ function setup() {
     let v = /** @type {HTMLInputElement} */ (document.getElementById("volume"));
     let s = document.getElementById("default-due-seconds");
     if (v) {
-      v.value = VOLUME.toString();
+      v.value = SETTINGS.volume.toString();
       v.onclick = (e) => {
         if (e && e.target) {
           // @ts-ignore - it does exist
-          VOLUME = /** @type {Number} */ (e.target.value);
-          let response = new Audio("./sounds/As2.mp3");
-          response.volume = VOLUME;
-          response.play();
+          SETTINGS.volume = /** @type {Number} */ (e.target.value);
+          playNote("As2")
         }
       };
     }
@@ -322,38 +289,106 @@ function flip() {
       else studyCardEl.innerText = getDueCards()[0].front;
   }
 }
-Notification.requestPermission();
-let remindMeAfterXSeconds = 25;
-let becomesDueNotifsOn = true;
-let CURRENT_SCREEN = "Study";
-let reminderNotifsOn = true;
-let lastReminderDate = 0;
-let VOLUME = 0.25;
-/** @type {Card[]} */
-const cards = [];
-setup();
-loadCardsFromLS();
+
+/**
+ * Adds any cards within local storage to the global cards array, if they weren't there already.
+ */
 function loadCardsFromLS() {
   /**@type {string | null} */
   let cardsJSON = localStorage.getItem("cards");
   if (cardsJSON) {
     /** @type {Card[]} */
-    let savedCards = JSON.parse(cardsJSON);
-    let IDs = cards.flatMap(c => c.id)
-    cards.push(
-      ...savedCards.filter((c) => {
-        return !IDs.includes(c.id)
-      })
-    );
+    let cardsInLocalStorage = JSON.parse(cardsJSON);
+    let currentIDsInDeck = cards.flatMap((c) => c.id);
+    let cardsNotInGlobalButInSaved = cardsInLocalStorage.filter((c) => {
+      return !currentIDsInDeck.includes(c.id);
+    });
+    cards.push(...cardsNotInGlobalButInSaved);
+    cardsNotInGlobalButInSaved.forEach((card) => {
+      addLabelToCardEntries(addNewEntryToCardList(card), card);
+      console.log(card);
+    });
   }
 }
+/**
+ * Replaces the saved array with the current cards in the global cards array.
+ */
 function saveCardsToLS() {
   localStorage.setItem("cards", JSON.stringify(cards));
 }
+/**
+ * Testing the bring-to-front functionality; doesn't work yet, will replace it with a working version later.
+ */
+function bringToFront() {
+  // setTimeout(() => {
+  //   window.open("meow.com", "meow.com")
+  //   window.blur()
+  //   window.focus();
+  //   console.log("ok")
+  // }, 2000);
+}
+
+
+
+
+
+let runningDueCardsList = 0;
+let CURRENT_SCREEN = "Study";
+/** @type {{card: Card, entryEl: HTMLElement}[]} */
+const entryEls = [];
+/** @type {Card[]} */
+const cards = [];
+let lastReminderDate = 0;
+const SETTINGS = {
+  playSoundWhenCardBecomesDue: true,
+  playSoundWhenReminding: true,
+  reminderInterval: 25,
+  notifyWhenDue: true,
+  remindersOn: true,
+  volume: 0.25,
+}
+function checkIfNewCardsAreDue() {
+  return runningDueCardsList < getDueCards().length
+}
+/**
+ * Plays the note within the ./sounds directory.
+ * @param {string} fileNameBeforeDot 
+ */
+function playNote(fileNameBeforeDot) {
+  let a = new Audio(`./sounds/${fileNameBeforeDot}.mp3`)
+  a.volume = SETTINGS.volume
+  a.play()
+}
+setInterval(() => {
+  refreshStudyCard();
+  checkIfNewCardsAreDue()
+  if (checkIfNewCardsAreDue()) {
+    runningDueCardsList++;
+    if (SETTINGS.playSoundWhenCardBecomesDue) {
+      playNote("E5")
+    }
+    new Notification("A new card is due.");
+  } else {
+    if (getDueCards().length > 0) {
+      let goalReminderDate = lastReminderDate + SETTINGS.reminderInterval * 1000;
+      if (SETTINGS.remindersOn && Date.now() > goalReminderDate) {
+        new Notification(
+          getDueCards().length === 1
+            ? "Remember: you have 1 due card!"
+            : `Remember: you have ${getDueCards().length} due cards!`
+        );
+        if (SETTINGS.playSoundWhenCardBecomesDue) {
+          playNote("Gs3")
+        }
+        lastReminderDate = Date.now();
+      }
+    }
+  }
+  entryEls.forEach((ec) => {
+    addLabelToCardEntries(ec.entryEl, ec.card);
+  });
+}, 1000);
+Notification.requestPermission();
+setup();
+loadCardsFromLS();
 changeScreenTo("Create");
-// setTimeout(() => {
-//   window.open("meow.com", "meow.com")
-//   window.blur()
-//   window.focus();
-//   console.log("ok")
-// }, 2000);
