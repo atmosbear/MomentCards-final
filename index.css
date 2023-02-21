@@ -206,7 +206,7 @@ select {
   padding: 1rem;
 }
 
-#save-settings-button {
+#export-settings-button {
   background: linear-gradient(lightblue, blue);
   box-shadow: #000000 0px 2px 5px;
   border-radius: 10px;

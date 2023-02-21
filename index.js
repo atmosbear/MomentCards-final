@@ -1,12 +1,31 @@
 //@ts-check
 
 /**
+ * @typedef Settings
+ * @property {boolean} playSoundWhenCardBecomesDue
+ * @property {boolean} playSoundWhenReminding
+ * @property {number} defaultDueDistanceMS
+ * @property {number} reminderInterval
+ * @property {boolean} notifyWhenDue
+ * @property {boolean} remindersOn
+ * @property {number} volume
+ */
+
+/**
+ * @typedef GameState
+ * @property {{card: Card, entryEl: HTMLElement}[]} cardElements
+ * @property {number} trackedNumOfDueCards
+ * @property {number} previousReminderDate
+ * @property {string} currentScreen
+ */
+
+/**
  * @typedef {Object} Card
+ * @property {number} dueDistance
+ * @property {number} dueMS
  * @property {string} front
  * @property {string} back
  * @property {string} id
- * @property {number} dueDistance
- * @property {number} dueMS
  */
 
 /**
@@ -14,27 +33,24 @@
  * @param {string} back
  * @returns {Card}
  */
-function makeCard(front, back) {
+function makeCard(front, back, creationDueDistance = Number(SETTINGS.defaultDueDistanceMS)) {
   const number = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   const creationMS = Date.now();
   const id = [creationMS, front, back, getRandom(number, 3).join("")].join("_");
-  const creationDueDistance = 5000;
   let card = {
     front,
     back,
     id,
-    dueDistance: creationDueDistance,
-    dueMS: creationDueDistance + creationMS,
+    dueDistance: Number(creationDueDistance),
+    dueMS: Number(creationDueDistance) + Number(creationMS),
   };
   if (
     // c.front === front && c.back === back
-    cards.find(
-      (c) =>
-      { return c.id }
-    ) === undefined
+    CARDS.find((c) => {
+      return c.id === card.id;
+    }) === undefined
   ) {
-    cards.push(card);
-    // entry
+    CARDS.push(card);
     addNewEntryToCardList(card);
     saveCardsToLS();
   }
@@ -60,6 +76,13 @@ function addNewEntryToCardList(card) {
     let editButton = document.createElement("div");
     buttonHolderEl.classList.add("button-holder");
     delButton.classList.add("delete-edit-button");
+    delButton.onclick = () => {
+      CARDS.splice(CARDS.indexOf(card), 1);
+      let el = gameState.cardElements.find((el) => el.card.id === card.id)?.entryEl;
+      if (el && el.parentElement) el.parentElement.remove();
+      gameLoop();
+      saveCardsToLS();
+    };
     editButton.classList.add("delete-edit-button");
     delButton.innerText = "Delete";
     editButton.innerText = "Edit";
@@ -76,16 +99,17 @@ function addNewEntryToCardList(card) {
 
 /**
  * Updates the card's label with its current information.
- * @param {HTMLElement} entryEl
+ * @param {HTMLElement} entryElement
  * @param {Card} card
  */
-function addLabelToCardEntries(entryEl, card) {
-  if (entryEls.filter((EE) => EE.card.id === card.id).length === 0) entryEls.push({ card, entryEl });
+function addLabelToCardEntries(entryElement, card) {
+  if (gameState.cardElements.filter((EE) => EE.card.id === card.id).length === 0)
+    gameState.cardElements.push({ card, entryEl: entryElement });
   let fText = innerWidth > 500 ? "Front: " : "F: ";
   let bText = innerWidth > 500 ? "Back: " : "B: ";
   let dInText = innerWidth > 500 ? "Due in: " : "D: ";
   let dAtText = innerWidth > 500 ? "Due at: " : "D: ";
-  entryEl.innerText =
+  entryElement.innerText =
     fText + card.front + "\n" + bText + card.back + "\n" + dInText + msDueDateToRoundedTime(card.dueMS);
 }
 
@@ -152,8 +176,9 @@ function getRandom(array, n = 1) {
  */
 function changeScreenTo(newScreenName) {
   if (newScreenName.includes("-screen")) newScreenName = newScreenName.replace("-screen", "");
-  if (["Study", "Create", "Settings"].includes(newScreenName)) {
-    CURRENT_SCREEN = newScreenName;
+  const screenExists = ["Study", "Create", "Settings"].includes(newScreenName);
+  if (screenExists) {
+    gameState.currentScreen = newScreenName;
     const screens = Array.from(document.querySelectorAll(".screen"));
     //@ts-expect-error - this is an HTMLElement, but JSDoc doesn't seem to allow the "as" that typescript does. Check later.
     screens.forEach((/**@type {HTMLElement}*/ s) => {
@@ -172,15 +197,15 @@ function changeScreenTo(newScreenName) {
  */
 function setupStudyBarClickEvent() {
   window.addEventListener("click", (e) => {
-    let arrowHolderElement = document.getElementById("answer-bar-arrow-holder");
+    const arrowHolderElement = document.getElementById("answer-bar-arrow-holder");
     if (e.target === document.getElementById("answer-bar")) {
-      let AB = document.getElementById("answer-bar");
+      const AB = document.getElementById("answer-bar");
       // @ts-ignore
       if (AB && arrowHolderElement) {
         alert("Ok");
         arrowHolderElement.style.translate = `${e.clientX - 0.5 * innerWidth}px`;
-        let current = e.clientX - 0.5 * innerWidth;
-        let minMax = AB.clientWidth;
+        const current = e.clientX - 0.5 * innerWidth;
+        const minMax = AB.clientWidth;
         let result = (current / minMax) * 2;
         if (e.clientX > innerWidth / 2) {
           result = Math.abs(result);
@@ -202,41 +227,99 @@ function answerCard(card, rating) {
   if (rating < -0.2) {
     rating /= 2;
   }
-  const previousDueDistance = card.dueDistance;
+  const previousDueDistance = Number(card.dueDistance);
   const newDueDistance = previousDueDistance + previousDueDistance * rating;
   card.dueDistance = newDueDistance;
   card.dueMS = Date.now() + newDueDistance;
 }
+
 /**
  * Returns all cards that are overdue.
  * @returns {Card[]}
  */
 function getDueCards() {
-  let dues = cards.filter((c) => {
-    // console.log(c.dueMS <= Date.now());
+  let dues = CARDS.filter((c) => {
     return c.dueMS <= Date.now();
   });
   return dues;
 }
+
 /**
  * Sets up the app - mostly click events.
  */
 function setup() {
   function setupSettingsScreen() {
     let v = /** @type {HTMLInputElement} */ (document.getElementById("volume"));
-    let s = document.getElementById("default-due-seconds");
     if (v) {
       v.value = SETTINGS.volume.toString();
       v.onclick = (e) => {
         if (e && e.target) {
           // @ts-ignore - it does exist
           SETTINGS.volume = /** @type {Number} */ (e.target.value);
-          playNote("As2")
+          playNote("As2");
+          saveSettingsToLS();
         }
       };
     }
+    let s = /** @type {HTMLInputElement} */ document.getElementById("default-due-seconds");
     if (s) {
-      s.onchange;
+      //@ts-ignore - it does exist
+      s.value = SETTINGS.defaultDueDistanceMS / 1000;
+      s.onchange = (e) => {
+        // @ts-ignore - it does exist
+        SETTINGS.defaultDueDistanceMS = Number(s.value) * 1000;
+        saveSettingsToLS();
+      };
+    }
+    let dn = /** @type {HTMLSelectElement} */ document.getElementById("due-notifications-setting");
+    if (dn) {
+      //@ts-ignore - it does exist
+      dn.value = SETTINGS.notifyWhenDue;
+      dn.onchange = () => {
+        // @ts-ignore - it does exist
+        SETTINGS.notifyWhenDue = dn.value;
+        saveSettingsToLS();
+      };
+    }
+    let rn = /** @type {HTMLSelectElement} */ document.getElementById("reminders-setting");
+    if (rn) {
+      //@ts-ignore - it does exist
+      rn.value = SETTINGS.remindersOn;
+      rn.onchange = () => {
+        //@ts-ignore - it does exist
+        SETTINGS.remindersOn = rn.value;
+        saveSettingsToLS();
+      };
+    }
+    let ri = /** @type {HTMLSelectElement} */ document.getElementById("reminder-interval-setting");
+    if (ri) {
+      //@ts-ignore - it does exist
+      ri.value = SETTINGS.reminderInterval;
+      ri.onchange = () => {
+        //@ts-ignore - it does exist
+        SETTINGS.reminderInterval = ri.value;
+        saveSettingsToLS();
+      };
+    }
+    let ds = /** @type {HTMLSelectElement} */ document.getElementById("due-sound-setting");
+    if (ds) {
+      //@ts-ignore - it does exist
+      ds.value = SETTINGS.playSoundWhenCardBecomesDue;
+      ds.onchange = () => {
+        //@ts-ignore - it does exist
+        SETTINGS.playSoundWhenCardBecomesDue = ds.value;
+        saveSettingsToLS();
+      };
+    }
+    let rs = /** @type {HTMLSelectElement} */ document.getElementById("reminder-sound-setting");
+    if (rs) {
+      //@ts-ignore - it does exist
+      rs.value = SETTINGS.playSoundWhenReminding;
+      rs.onchange = () => {
+        //@ts-ignore - it does exist
+        SETTINGS.playSoundWhenReminding = rs.value;
+        saveSettingsToLS();
+      };
     }
   }
   function setupCardCreationButton() {
@@ -244,7 +327,7 @@ function setup() {
     if (cb) {
       cb.onclick = () => {
         if (fCardEl && bCardEl) {
-          makeCard(fCardEl.value, bCardEl.value);
+          let c = makeCard(fCardEl.value, bCardEl.value);
         }
       };
     }
@@ -258,10 +341,10 @@ function setup() {
   }
   let fCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-front"));
   let bCardEl = /** @type {HTMLTextAreaElement} */ (document.getElementById("create-card-back"));
-  setupSettingsScreen();
+  setupNavbarScreenChanges();
   setupStudyBarClickEvent();
   setupCardCreationButton();
-  setupNavbarScreenChanges();
+  setupSettingsScreen();
 
   document.getElementById("flip-button")?.addEventListener("click", () => {
     flip();
@@ -278,6 +361,7 @@ function refreshStudyCard() {
     studyCardEl.innerHTML = "There are no cards to study.";
   }
 }
+
 /**
  * Flips the study card so that the other side is showing.
  */
@@ -290,6 +374,50 @@ function flip() {
   }
 }
 
+function ensureSettingsAreBooleans() {
+  /**@ts-ignore */
+  if (SETTINGS.remindersOn === "true") {
+    SETTINGS.remindersOn = true;
+  /**@ts-ignore */
+  } else if (SETTINGS.remindersOn === "false") {
+    SETTINGS.remindersOn = false;
+  }
+  /**@ts-ignore */
+  if (SETTINGS.notifyWhenDue === "true") {
+    SETTINGS.notifyWhenDue = true;
+  /**@ts-ignore */
+  } else if (SETTINGS.notifyWhenDue === "false") {
+    SETTINGS.notifyWhenDue = false;
+  }
+  /**@ts-ignore */
+  if (SETTINGS.playSoundWhenCardBecomesDue === "true") {
+    SETTINGS.playSoundWhenCardBecomesDue = true;
+  /**@ts-ignore */
+  } else if (SETTINGS.playSoundWhenCardBecomesDue === "false") {
+    SETTINGS.playSoundWhenCardBecomesDue = false;
+  }
+  /**@ts-ignore */
+  if (SETTINGS.playSoundWhenReminding === "true") {
+    SETTINGS.playSoundWhenReminding = true;
+  /**@ts-ignore */
+  } else if (SETTINGS.playSoundWhenReminding === "false") {
+    SETTINGS.playSoundWhenReminding = false;
+  }
+}
+/**
+ * Gets the settings from LS, if the user has been to the app before.
+ */
+function loadSettingsFromLS() {
+  /**@type {string | null} */
+  let settingsJSON = localStorage.getItem("settings");
+  if (settingsJSON) {
+    // /** @type {Settings} */
+    let settingsInLocalStorage = JSON.parse(settingsJSON);
+    SETTINGS = settingsInLocalStorage;
+    ensureSettingsAreBooleans()
+  }
+}
+
 /**
  * Adds any cards within local storage to the global cards array, if they weren't there already.
  */
@@ -299,23 +427,36 @@ function loadCardsFromLS() {
   if (cardsJSON) {
     /** @type {Card[]} */
     let cardsInLocalStorage = JSON.parse(cardsJSON);
-    let currentIDsInDeck = cards.flatMap((c) => c.id);
+    let currentIDsInDeck = CARDS.flatMap((c) => c.id);
     let cardsNotInGlobalButInSaved = cardsInLocalStorage.filter((c) => {
       return !currentIDsInDeck.includes(c.id);
     });
-    cards.push(...cardsNotInGlobalButInSaved);
     cardsNotInGlobalButInSaved.forEach((card) => {
-      addLabelToCardEntries(addNewEntryToCardList(card), card);
-      console.log(card);
+      let c = makeCard(card.front, card.back);
+      c.dueMS = card.dueMS;
+      gameLoop();
     });
   }
 }
+
 /**
- * Replaces the saved array with the current cards in the global cards array.
+ * Replaces the cards in local storage (or sets it) with the current cards in the global cards array.
  */
 function saveCardsToLS() {
-  localStorage.setItem("cards", JSON.stringify(cards));
+  localStorage.setItem("cards", JSON.stringify(CARDS));
+  CARDS.forEach((card) => console.log(card));
+  ensureSettingsAreBooleans()
 }
+
+/**
+ * Replaces the settings in local storage (or sets it) with the current settings in the global settings.
+ */
+function saveSettingsToLS() {
+  localStorage.setItem("settings", JSON.stringify(SETTINGS));
+  new Notification("Saved.");
+  ensureSettingsAreBooleans()
+}
+
 /**
  * Testing the bring-to-front functionality; doesn't work yet, will replace it with a working version later.
  */
@@ -328,67 +469,111 @@ function bringToFront() {
   // }, 2000);
 }
 
-
-
-
-
-let runningDueCardsList = 0;
-let CURRENT_SCREEN = "Study";
-/** @type {{card: Card, entryEl: HTMLElement}[]} */
-const entryEls = [];
-/** @type {Card[]} */
-const cards = [];
-let lastReminderDate = 0;
-const SETTINGS = {
-  playSoundWhenCardBecomesDue: true,
-  playSoundWhenReminding: true,
-  reminderInterval: 25,
-  notifyWhenDue: true,
-  remindersOn: true,
-  volume: 0.25,
-}
+/**
+ * @returns {boolean} whether or not there are new cards due.
+ */
 function checkIfNewCardsAreDue() {
-  return runningDueCardsList < getDueCards().length
+  return gameState.trackedNumOfDueCards < getDueCards().length;
 }
+
 /**
  * Plays the note within the ./sounds directory.
- * @param {string} fileNameBeforeDot 
+ * @param {string} fileNameBeforeDot
  */
 function playNote(fileNameBeforeDot) {
-  let a = new Audio(`./sounds/${fileNameBeforeDot}.mp3`)
-  a.volume = SETTINGS.volume
-  a.play()
+  let a = new Audio(`./sounds/${fileNameBeforeDot}.mp3`);
+  a.volume = SETTINGS.volume;
+  a.play();
 }
-setInterval(() => {
-  refreshStudyCard();
-  checkIfNewCardsAreDue()
-  if (checkIfNewCardsAreDue()) {
-    runningDueCardsList++;
-    if (SETTINGS.playSoundWhenCardBecomesDue) {
-      playNote("E5")
-    }
+
+/**
+ * Notifies the user that a card is due (if settings allow it).
+ */
+function handleNewCardIsDue() {
+  gameState.trackedNumOfDueCards++;
+  if (SETTINGS.notifyWhenDue) {
     new Notification("A new card is due.");
+    if (SETTINGS.playSoundWhenCardBecomesDue) {
+      playNote("E5");
+    }
+  }
+}
+
+/**
+ * Notifies the user when a reminder is due (if the settings allow it).
+ */
+function handleReminder() {
+  gameState.previousReminderDate = Date.now();
+  if (SETTINGS.remindersOn) {
+    new Notification(
+      getDueCards().length === 1
+        ? "Remember: you have 1 due card!"
+        : `Remember: you have ${getDueCards().length} due cards!`
+    );
+    if (SETTINGS.playSoundWhenReminding) {
+      playNote("Gs3");
+    }
+  }
+}
+
+/**
+ * Checks and handles newly due cards and reminders.
+ */
+function gameLoop() {
+  refreshStudyCard();
+  checkIfNewCardsAreDue();
+  if (checkIfNewCardsAreDue()) {
+    handleNewCardIsDue();
   } else {
     if (getDueCards().length > 0) {
-      let goalReminderDate = lastReminderDate + SETTINGS.reminderInterval * 1000;
-      if (SETTINGS.remindersOn && Date.now() > goalReminderDate) {
-        new Notification(
-          getDueCards().length === 1
-            ? "Remember: you have 1 due card!"
-            : `Remember: you have ${getDueCards().length} due cards!`
-        );
-        if (SETTINGS.playSoundWhenCardBecomesDue) {
-          playNote("Gs3")
-        }
-        lastReminderDate = Date.now();
+      let nextReminderDate = gameState.previousReminderDate + SETTINGS.reminderInterval * 1000;
+      if (Date.now() > nextReminderDate) {
+        handleReminder();
       }
     }
   }
-  entryEls.forEach((ec) => {
+  gameState.cardElements.forEach((ec) => {
     addLabelToCardEntries(ec.entryEl, ec.card);
   });
+}
+
+// function deleteAllCookies() {
+//   const cookies = document.cookie.split(";");
+
+//   for (let i = 0; i < cookies.length; i++) {
+//       const cookie = cookies[i];
+//       const eqPos = cookie.indexOf("=");
+//       const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+//       document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+//   }
+// }
+
+// deleteAllCookies()
+
+/** @type {GameState} */
+const gameState = {
+  trackedNumOfDueCards: 0,
+  previousReminderDate: 0,
+  currentScreen: "Study",
+  cardElements: [],
+};
+/** @type {Settings} */
+
+let SETTINGS = {
+  playSoundWhenCardBecomesDue: true,
+  playSoundWhenReminding: true,
+  defaultDueDistanceMS: 5000,
+  reminderInterval: 2,
+  notifyWhenDue: true,
+  remindersOn: true,
+  volume: 0.25,
+};
+/** @type {Card[]} */ const CARDS = [];
+loadSettingsFromLS();
+loadCardsFromLS();
+setInterval(() => {
+  gameLoop();
 }, 1000);
 Notification.requestPermission();
 setup();
-loadCardsFromLS();
 changeScreenTo("Create");

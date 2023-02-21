@@ -45,11 +45,41 @@
   <div class="screen" id="Settings-screen">
     <div class="screen-title">Settings</div>
     <div class="screen-bg" id="settings-screen-bg">
+
       <label class="settings-entry-label" for="volume">Volume</label>
       <input id="volume" type="range" min="0" max="1" value="0.25" step="0.01">
+
       <label class="settings-entry-label" for="default-due-seconds">Default due date from creation (in seconds)</label>
       <input id="default-due-seconds" type="number">
+
+      <label class="settings-entry-label" for="reminders-setting">Reminders</label>
+      <select id="reminders-setting">
+        <option value="true">on</option>
+        <option value="false">off</option>
+      </select>
+
+      <label class="settings-entry-label" for="due-notifications-setting">Due notifications</label>
+      <select id="due-notifications-setting">
+        <option value="true">on</option>
+        <option value="false">off</option>
+      </select>
+
+      <label class="settings-entry-label" for="due-sound-setting">Play a sound when notifying that a card is due (requires due notifications on)</label>
+      <select id="due-sound-setting">
+        <option value="true">yes</option>
+        <option value="false">no</option>
+      </select>
+
+      <label class="settings-entry-label" for="reminder-sound-setting">Play a sound when reminding (requires reminders on)</label>
+      <select id="reminder-sound-setting">
+        <option value="true">yes</option>
+        <option value="false">no</option>
+      </select>
+
+      <label class="settings-entry-label" for="reminder-interval-setting">Remind me every... (seconds)</label>
+      <input id="reminder-interval-setting" type="number">
+
     </div>
-    <button id="save-settings-button">Save Settings</button>
+    <button id="export-settings-button">Export Settings</button>
   </div>
 </body>
