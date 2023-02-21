@@ -562,8 +562,8 @@ const gameState = {
 let SETTINGS = {
   playSoundWhenCardBecomesDue: true,
   playSoundWhenReminding: true,
-  defaultDueDistanceMS: 5000,
-  reminderInterval: 2,
+  defaultDueDistanceMS: 20000,
+  reminderInterval: 90,
   notifyWhenDue: true,
   remindersOn: true,
   volume: 0.25,
